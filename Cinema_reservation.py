@@ -8,28 +8,53 @@ class Cinema:
         self.name = name
         self.location = location
         self.rooms = {}
-      
+              
     def add_room(self, room):
-        self.rooms[room.room_number] = room
-    
+        self.rooms[room.room_number] = room#
+   
     def __str__(self):
         return f"Cinema: {self.name}\nLocation: {self.location}"
     
     def view_rooms(self):
         return "\n".join(str(room)for room in self.rooms.values())  
+    
+    def show_playtime(self):
+        timetable = {}
+        for room_number, room in self.rooms.items():
+            timetable[room_number] = room.timetable()
+        return timetable
+    
+    def show_playtime_formatted(self):
+        formatted_output = ""
+        for room_number, room in self.rooms.items():
+            timetable = room.timetable()
+            formatted_output += f"Room number {room_number}:\n"
+            for movie, details in timetable.items():
+                formatted_output += f"  Movie: {movie}, Start time: {details['Start time']}, Seats: Normal - {details['Seats'][0]}, Premium - {details['Seats'][1]}\n"
+            formatted_output += "\n"
+        return formatted_output
 
 class Room:
     def __init__(self,room_number, cinema, normal_seats, premium_seats):
         self.room_number = room_number
         self.cinema = cinema
+        self.normal_seats = normal_seats
+        self.premium_seats = premium_seats
         self.seats = {i: Seat_normal(i, self) for i in range(normal_seats+1)}
         self.seats.update({i: Seat_premium(i, self) for i in range(normal_seats +1, normal_seats +1 + premium_seats)})
+        self.movie_timetable = {}
 
     def list_seats(self):
         return "\n".join(str(seat) for seat in self.seats.values())
  
     def __str__(self):
         return f"Room number {self.room_number}"
+    
+    def add_movie(self, movie, start_time):
+        self.movie_timetable[movie.name] = (start_time, self.normal_seats, self.premium_seats)
+    
+    def timetable(self):
+        return {movie: {"Start time": time, "Seats": (self.normal_seats, self.premium_seats)} for movie, (time, _, _) in self.movie_timetable.items()}
 
 class Seat:
     def __init__(self, seat, room):
@@ -57,6 +82,9 @@ class Seat_premium(Seat):
 class Movie:
     def __init__(self, name):
         self.name = name
+    
+    def __str__(self):
+        return f"Movie: {self.name}"
 
 cineplex_muc = Cinema("Cineplex", "Munich")
 cineplex_muc_room1 = Room(1, cineplex_muc, normal_seats= 35, premium_seats = 15)
@@ -71,9 +99,20 @@ comedy_movie = Movie("Funny laughing 3")
 
 cineplex_muc.add_room(cineplex_muc_room1)
 cineplex_muc.add_room(cineplex_muc_room2)
+cineplex_muc_room1.add_movie(comedy_movie, "18:00")
+cineplex_muc_room1.add_movie(romance_movie, "20:00")
+cineplex_muc_room1.add_movie(action_movie, "22:00")
+cineplex_muc_room2.add_movie(comedy_movie, "16:00")
+cineplex_muc_room2.add_movie(romance_movie, "19:00")
+cineplex_muc_room2.add_movie(action_movie, "21:00")
+palast_ber_room1.add_movie(action_movie, "15:00")
+palast_ber_room1.add_movie(comedy_movie, "17:00")
+palast_ber_room1.add_movie(romance_movie, "19:00")
+palast_ber_room2.add_movie(action_movie, "19:00")
+palast_ber_room2.add_movie(comedy_movie, "21:00")
+palast_ber_room2.add_movie(romance_movie, "23:00")
 
-print(cineplex_muc_room1.list_seats())
-    
+print(cineplex_muc.show_playtime_formatted())
 
 # reserve = 12, 14, 15
 # cineplex_muc_room1.set_seat_status(reserve)
